@@ -1,4 +1,5 @@
-const CACHE_NAME = 'chattaiko-v2';
+# Generar sw.js corregido
+sw_js = """const CACHE_NAME = 'chattaiko-v2';
 const urlsToCache = ['/','/index.html','/admin.html','/logo.svg','/manifest.json'];
 
 self.addEventListener('install', e => {
@@ -10,3 +11,4 @@ self.addEventListener('fetch', e => {
     caches.match(e.request).then(r => r || fetch(e.request))
   );
 });
+"""
