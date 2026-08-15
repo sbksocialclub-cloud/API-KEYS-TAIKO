@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0d0d0d">
+<link rel="icon" type="image/svg+xml" href="/logo.svg">
+<title>Admin — CHATTAIKO</title>
+<style>
+  :root {
+    --bg: #0a0a0f; --surface: #12121a; --surface-raised: #1a1a28;
+    --border: #2a2a3a; --text: #e8e8f0; --text-sec: #a0a0b8; --text-ter: #606070;
+    --accent: #00f2ff; --accent-glow: rgba(0,242,255,0.15);
+    --ok: #00ff88; --danger: #ff3366; --warn: #ffaa00;
+    --neon-pink: #ff00ff;
+    --radius: 14px; --radius-sm: 10px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; min-height:100vh; }
+
+  .login-box { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; padding:24px; position:relative; }
+  .login-box::before {
+    content:''; position:absolute; top:-50%; left:-50%; width:200%; height:200%;
+    background: radial-gradient(circle at 30% 30%, rgba(0,242,255,0.06) 0%, transparent 50%),
+                radial-gradient(circle at 70% 70%, rgba(255,0,255,0.04) 0%, transparent 50%);
+    pointer-events:none;
+  }
+  .login-box img { width:100px; height:100px; margin-bottom:16px; filter: drop-shadow(0 0 20px rgba(0,242,255,0.3)); position:relative; }
+  .login-box h1 { font-size:28px; font-weight:900; letter-spacing:3px; position:relative; background: linear-gradient(90deg, var(--accent), var(--neon-pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .login-box p { color:var(--text-sec); margin-bottom:28px; position:relative; }
+  .login-input { width:100%; max-width:320px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px 16px; color:var(--text); font-size:15px; margin-bottom:12px; outline:none; position:relative; transition:all .2s; }
+  .login-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-glow); }
+  .login-btn { width:100%; max-width:320px; padding:14px; background: linear-gradient(135deg, var(--accent), #00c3cc); color:#000; border:none; border-radius:var(--radius-sm); font-size:15px; font-weight:700; cursor:pointer; position:relative; transition:all .2s; }
+  .login-btn:hover { box-shadow:0 0 20px rgba(0,242,255,0.3); }
+
+  .admin-nav { display:flex; gap:4px; padding:12px 16px; background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:10; }
+  .admin-nav button { flex:1; padding:10px; border:none; background:transparent; color:var(--text-sec); font-size:13px; font-weight:500; cursor:pointer; border-radius:var(--radius-sm); transition:all .15s; }
+  .admin-nav button.active { background:var(--surface-raised); color:var(--accent); }
+
+  .admin-content { padding:20px; max-width:1200px; margin:0 auto; }
+  .section { display:none; }
+  .section.active { display:block; }
+
+  .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:12px; margin-bottom:24px; }
+  .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; transition:all .2s; }
+  .stat-card:hover { border-color:var(--accent); box-shadow:0 0 15px rgba(0,242,255,0.05); }
+  .stat-value { font-size:32px; font-weight:700; background: linear-gradient(90deg, var(--accent), var(--neon-pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .stat-label { font-size:13px; color:var(--text-sec); margin-top:4px; }
+
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:12px; }
+  .card-title { font-size:14px; font-weight:600; margin-bottom:12px; color:var(--accent); }
+
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; padding:10px; color:var(--text-ter); font-weight:500; border-bottom:1px solid var(--border); }
+  td { padding:10px; border-bottom:1px solid var(--border); color:var(--text-sec); }
+  tr:hover td { background:var(--surface-raised); }
+  .badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+  .badge.ok { background:rgba(0,255,136,.15); color:var(--ok); }
+  .badge.danger { background:rgba(255,51,102,.15); color:var(--danger); }
+  .badge.warn { background:rgba(255,170,0,.15); color:var(--warn); }
+  .btn-sm { padding:4px 10px; border:1px solid var(--border); background:var(--surface-raised); color:var(--text); border-radius:6px; font-size:12px; cursor:pointer; transition:all .15s; }
+  .btn-sm:hover { border-color:var(--accent); color:var(--accent); }
+
+  .service-row { display:flex; align-items:center; justify-content:space-between; padding:12px; border-bottom:1px solid var(--border); }
+  .service-row:last-child { border-bottom:none; }
+  .service-info { display:flex; align-items:center; gap:10px; }
+  .service-dot { width:8px; height:8px; border-radius:50%; background:var(--ok); box-shadow:0 0 6px var(--ok); }
+  .service-dot.off { background:var(--danger); box-shadow:0 0 6px var(--danger); }
+  .service-name { font-size:14px; font-weight:500; }
+  .service-meta { font-size:12px; color:var(--text-ter); }
+
+  .toast { position:fixed; top:20px; left:50%; transform:translateX(-50%) translateY(-60px); background:var(--ok); color:#000; padding:12px 24px; border-radius:24px; font-size:14px; font-weight:700; opacity:0; transition:all .3s; z-index:300; box-shadow:0 0 20px rgba(0,255,136,0.3); }
+  .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+
+  @media(max-width:600px) {
+    .stats-grid { grid-template-columns:1fr 1fr; }
+    table { font-size:12px; }
+    th, td { padding:8px 6px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-box" id="login-screen">
+  <img src="/logo.svg" alt="CHATTAIKO">
+  <h1>CHATTAIKO</h1>
+  <p>Panel de administración</p>
+  <input class="login-input" id="admin-pass" type="password" placeholder="Contraseña de administrador" onkeydown="if(event.key==='Enter') doLogin()">
+  <button class="login-btn" onclick="doLogin()">Entrar</button>
+</div>
+
+<!-- ADMIN -->
+<div id="admin-screen" style="display:none;">
+  <div class="admin-nav">
+    <button class="active" onclick="showTab('dashboard')" id="tab-dashboard">📊 Dashboard</button>
+    <button onclick="showTab('users')" id="tab-users">👥 Usuarios</button>
+    <button onclick="showTab('services')" id="tab-services">🔌 Servicios</button>
+  </div>
+
+  <div class="admin-content">
+    <!-- DASHBOARD -->
+    <div class="section active" id="sec-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-value" id="stat-users">—</div><div class="stat-label">Usuarios registrados</div></div>
+        <div class="stat-card"><div class="stat-value" id="stat-requests">—</div><div class="stat-label">Peticiones totales</div></div>
+        <div class="stat-card"><div class="stat-value" id="stat-today">—</div><div class="stat-label">Hoy</div></div>
+        <div class="stat-card"><div class="stat-value" id="stat-services">—</div><div class="stat-label">Servicios activos</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📈 Uso por servicio</div>
+        <div id="service-stats"></div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="section" id="sec-users">
+      <div class="card">
+        <div class="card-title">👥 Usuarios registrados</div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>API Key</th><th>Peticiones</th><th>Éxito</th><th>Estado</th><th>Registro</th><th>Acción</th></tr></thead>
+            <tbody id="users-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SERVICES -->
+    <div class="section" id="sec-services">
+      <div class="card">
+        <div class="card-title">🔌 Servicios configurados</div>
+        <div id="services-list"></div>
+      </div>
+      <div class="card" style="margin-top:16px;">
+        <div class="card-title">⚙️ Cómo funciona CHATTAIKO</div>
+        <p style="font-size:13px;color:var(--text-sec);line-height:1.7;">
+          Los usuarios se registran y obtienen una API key propia (<code>sk-...</code>).<br>
+          Cuando hacen una petición, el orquestador elige automáticamente el mejor servicio disponible entre los que configuraste en el <code>.env</code>.<br>
+          Los usuarios <b>nunca ven</b> tus claves privadas ni saben qué proveedor responde.<br><br>
+          <b>Para añadir más servicios:</b> edita el archivo <code>.env</code>, añade la variable (ej: <code>GROQ_API_KEY=gsk_...</code>) y reinicia el servidor.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = '';
+let adminPass = localStorage.getItem('chattaiko_admin_pass') || '';
+
+
+
+async function doLogin() {
+  const pass = document.getElementById('admin-pass').value;
+  try {
+    const r = await fetch(API_BASE + '/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pass })
+    });
+    if (!r.ok) throw new Error();
+    const data = await r.json();
+    adminToken = data.token;
+    localStorage.setItem('chattaiko_admin_token', adminToken);
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-screen').style.display = 'block';
+    loadDashboard();
+  } catch(e) {
+    showToast('❌ Contraseña incorrecta');
+  }
+}
+
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.admin-nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+  if (id === 'dashboard') loadDashboard();
+  if (id === 'users') loadUsers();
+  if (id === 'services') loadServices();
+}
+
+async function loadDashboard() {
+  try {
+    const r = await fetch(API_BASE + '/api/admin/stats', { headers: { 'Authorization': 'Bearer ' + adminToken } });
+    const data = await r.json();
+    document.getElementById('stat-users').textContent = data.totalUsers;
+    document.getElementById('stat-requests').textContent = data.totalRequests;
+    document.getElementById('stat-today').textContent = data.todayRequests;
+    document.getElementById('stat-services').textContent = data.activeServices;
+
+    const container = document.getElementById('service-stats');
+    if (!data.byService.length) { container.innerHTML = '<p style="color:var(--text-ter);font-size:13px;">Sin datos aún</p>'; return; }
+    container.innerHTML = data.byService.map(s => `
+      <div class="service-row">
+        <div class="service-info">
+          <div class="service-dot ${s.ok > 0 ? '' : 'off'}"></div>
+          <div>
+            <div class="service-name">${s.api_name}</div>
+            <div class="service-meta">${s.count} peticiones · ${s.ok} exitosas</div>
+          </div>
+        </div>
+        <span class="badge ${s.ok > 0 ? 'ok' : 'danger'}">${Math.round((s.ok/s.count)*100)||0}% éxito</span>
+      </div>
+    `).join('');
+  } catch(e) { showToast('Error cargando datos'); }
+}
+
+async function loadUsers() {
+  try {
+    const r = await fetch(API_BASE + '/api/admin/users', { headers: { 'Authorization': 'Bearer ' + adminToken } });
+    const users = await r.json();
+    const tbody = document.getElementById('users-table');
+    tbody.innerHTML = users.map(u => `
+      <tr>
+        <td>${u.id}</td>
+        <td>${u.name || '—'}</td>
+        <td>${u.email}</td>
+        <td><code style="font-size:11px;">${u.api_key.substring(0,12)}...</code></td>
+        <td>${u.total_requests || 0}</td>
+        <td>${u.successful || 0}</td>
+        <td><span class="badge ${u.active ? 'ok' : 'danger'}">${u.active ? 'Activo' : 'Bloqueado'}</span></td>
+        <td>${new Date(u.created_at).toLocaleDateString()}</td>
+        <td><button class="btn-sm" onclick="toggleUser(${u.id}, ${u.active ? 0 : 1})">${u.active ? 'Bloquear' : 'Activar'}</button></td>
+      </tr>
+    `).join('');
+  } catch(e) { showToast('Error cargando usuarios'); }
+}
+
+async function toggleUser(id, active) {
+  try {
+    await fetch(API_BASE + '/api/admin/toggle-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
+      body: JSON.stringify({ userId: id, active })
+    });
+    showToast(active ? '✅ Usuario activado' : '🚫 Usuario bloqueado');
+    loadUsers();
+  } catch(e) { showToast('Error'); }
+}
+
+async function loadServices() {
+  try {
+    const r = await fetch(API_BASE + '/api/admin/services', { headers: { 'Authorization': 'Bearer ' + adminToken } });
+    const services = await r.json();
+    const container = document.getElementById('services-list');
+    container.innerHTML = services.map(s => `
+      <div class="service-row">
+        <div class="service-info">
+          <div class="service-dot"></div>
+          <div>
+            <div class="service-name">${s.name}</div>
+            <div class="service-meta">${s.id}</div>
+          </div>
+        </div>
+        <span class="badge ok">Activo</span>
+      </div>
+    `).join('');
+  } catch(e) { showToast('Error cargando servicios'); }
+}
+
+function showToast(t) {
+  const el = document.getElementById('toast');
+  el.textContent = t; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
