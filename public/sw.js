@@ -1,4 +1,3 @@
-sw_js = """const CACHE_NAME = 'chattaiko-v2';
 const urlsToCache = ['/','/index.html','/admin.html','/logo.svg','/manifest.json'];
 
 self.addEventListener('install', e => {
