@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f0f1a">
+<title>CHATTAIKO Admin</title>
+<style>
+:root{--bg:#0f0f1a;--bg2:#1a1a2e;--bg3:#252540;--accent:#00d4ff;--accent2:#7c3aed;--text:#e2e8f0;--text2:#94a3b8;--danger:#ef4444;--success:#22c55e;--warning:#f59e0b;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;overflow:hidden;}
+.hidden{display:none !important;}
+
+/* LOGIN */
+#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,var(--bg) 0%,var(--bg2) 100%);}
+.login-box{background:var(--bg2);border:1px solid var(--bg3);border-radius:20px;padding:40px;width:100%;max-width:380px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);}
+.login-box h1{font-size:28px;margin-bottom:8px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.login-box p{color:var(--text2);margin-bottom:24px;font-size:14px;}
+.login-box input{width:100%;padding:14px 16px;background:var(--bg3);border:1px solid #333;border-radius:12px;color:var(--text);font-size:15px;margin-bottom:12px;outline:none;transition:border-color .2s;}
+.login-box input:focus{border-color:var(--accent);}
+.login-box button{width:100%;padding:14px;background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;border-radius:12px;color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:opacity .2s,transform .1s;}
+.login-box button:hover{opacity:.9;}
+.login-box button:active{transform:scale(.98);}
+.login-error{color:var(--danger);font-size:13px;margin-top:10px;text-align:center;}
+
+/* APP */
+.app{display:none;flex-direction:column;min-height:100vh;}
+.app.active{display:flex;}
+header{background:var(--bg2);border-bottom:1px solid var(--bg3);padding:0 20px;position:sticky;top:0;z-index:100;}
+.header-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:60px;}
+.logo{font-size:20px;font-weight:700;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.header-actions{display:flex;gap:8px;align-items:center;}
+.header-actions button{background:var(--bg3);border:1px solid #333;color:var(--text2);padding:8px 14px;border-radius:10px;cursor:pointer;font-size:13px;transition:all .2s;}
+.header-actions button:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+.header-actions button.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+main{flex:1;max-width:1400px;width:100%;margin:0 auto;padding:20px;overflow-y:auto;}
+
+/* CARDS */
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:24px;}
+@media(min-width:768px){.cards{grid-template-columns:repeat(4,1fr);}}
+.card{background:var(--bg2);border:1px solid var(--bg3);border-radius:16px;padding:20px;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));opacity:.6;}
+.card .num{font-size:36px;font-weight:700;color:var(--accent);line-height:1;}
+.card .label{font-size:13px;color:var(--text2);margin-top:6px;}
+
+/* SECTIONS */
+.section{background:var(--bg2);border:1px solid var(--bg3);border-radius:16px;margin-bottom:20px;overflow:hidden;}
+.section-header{padding:16px 20px;border-bottom:1px solid var(--bg3);display:flex;align-items:center;justify-content:space-between;}
+.section-header h2{font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px;}
+
+/* CHAT */
+.chat-layout{display:grid;grid-template-columns:1fr;gap:0;min-height:500px;}
+@media(min-width:900px){.chat-layout{grid-template-columns:260px 1fr;}}
+.chat-sidebar{background:var(--bg);border-bottom:1px solid var(--bg3);padding:16px;}
+@media(min-width:900px){.chat-sidebar{border-bottom:none;border-right:1px solid var(--bg3);}}
+.chat-sidebar h3{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:12px;}
+.provider-list{display:flex;flex-direction:column;gap:6px;}
+.provider-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;border:1px solid transparent;transition:all .2s;font-size:14px;}
+.provider-chip:hover{background:var(--bg3);}
+.provider-chip.active{background:rgba(0,212,255,0.08);border-color:var(--accent);}
+.provider-chip .dot{width:8px;height:8px;border-radius:50%;background:var(--text2);flex-shrink:0;}
+.provider-chip.active .dot{background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.provider-chip .name{flex:1;}
+.provider-chip .model{font-size:11px;color:var(--text2);background:var(--bg3);padding:2px 8px;border-radius:6px;}
+
+.chat-main{display:flex;flex-direction:column;min-height:500px;}
+.chat-messages{flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:16px;max-height:60vh;}
+.msg{display:flex;gap:12px;max-width:90%;}
+.msg.user{align-self:flex-end;flex-direction:row-reverse;}
+.msg-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;}
+.msg.user .msg-avatar{background:var(--accent);color:#000;}
+.msg.bot .msg-avatar{background:var(--accent2);color:#fff;}
+.msg-bubble{background:var(--bg3);padding:12px 16px;border-radius:16px;font-size:14px;line-height:1.6;word-break:break-word;}
+.msg.user .msg-bubble{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
+.msg-meta{font-size:11px;color:var(--text2);margin-top:4px;display:flex;gap:10px;align-items:center;}
+.msg-meta .provider-tag{background:var(--bg);padding:2px 8px;border-radius:6px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;}
+.typing{display:flex;gap:4px;padding:12px 14px;align-self:flex-start;}
+.typing span{width:8px;height:8px;border-radius:50%;background:var(--text2);animation:bounce 1.4s infinite ease-in-out;}
+.typing span:nth-child(2){animation-delay:.2s;}
+.typing span:nth-child(3){animation-delay:.4s;}
+@keyframes bounce{0%,80%,100%{transform:scale(0);}40%{transform:scale(1);}}
+
+.chat-input-area{padding:16px 20px;border-top:1px solid var(--bg3);display:flex;gap:10px;align-items:flex-end;}
+.chat-input-area textarea{flex:1;background:var(--bg3);border:1px solid #333;border-radius:14px;padding:12px 16px;color:var(--text);font-size:14px;resize:none;outline:none;min-height:48px;max-height:120px;font-family:inherit;}
+.chat-input-area textarea:focus{border-color:var(--accent);}
+.chat-input-area button{width:48px;height:48px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:14px;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .2s;}
+.chat-input-area button:hover{opacity:.85;}
+.chat-input-area button:disabled{opacity:.4;cursor:not-allowed;}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th,td{padding:14px 16px;text-align:left;border-bottom:1px solid var(--bg3);}
+th{color:var(--text2);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.5px;}
+td{color:var(--text);}
+tr:hover td{background:rgba(255,255,255,0.02);}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;}
+.badge-success{background:rgba(34,197,94,0.15);color:var(--success);}
+.badge-danger{background:rgba(239,68,68,0.15);color:var(--danger);}
+.toggle-btn{background:var(--bg3);border:1px solid #333;color:var(--text);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;transition:all .2s;}
+.toggle-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* SERVICES */
+.service-row{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--bg3);}
+.service-row:last-child{border-bottom:none;}
+.service-info{display:flex;align-items:center;gap:12px;}
+.service-status{width:10px;height:10px;border-radius:50%;background:var(--success);box-shadow:0 0 8px var(--success);}
+.service-status.off{background:var(--danger);box-shadow:0 0 8px var(--danger);}
+.service-name{font-weight:500;font-size:14px;}
+.service-url{font-size:12px;color:var(--text2);margin-top:2px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg2);border:1px solid var(--bg3);color:var(--text);padding:12px 24px;border-radius:12px;font-size:14px;z-index:1000;opacity:0;transition:all .3s ease;box-shadow:0 10px 40px rgba(0,0,0,0.4);}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+.toast.success{border-color:var(--success);}
+.toast.error{border-color:var(--danger);}
+
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:#444;}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-box">
+    <h1>⚡ CHATTAIKO</h1>
+    <p>Panel de Administración</p>
+    <input type="password" id="adminPass" placeholder="Contraseña de admin" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Entrar</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<div class="app" id="app">
+  <header>
+    <div class="header-inner">
+      <div class="logo">⚡ CHATTAIKO Admin</div>
+      <div class="header-actions">
+        <button class="active" onclick="showTab('dashboard')" id="btn-dashboard">📊 Dashboard</button>
+        <button onclick="showTab('chat')" id="btn-chat">💬 Chat</button>
+        <button onclick="showTab('users')" id="btn-users">👥 Usuarios</button>
+        <button onclick="showTab('services')" id="btn-services">🔌 Servicios</button>
+        <button onclick="logout()">🚪 Salir</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div id="tab-dashboard">
+      <div class="cards">
+        <div class="card"><div class="num" id="stat-users">-</div><div class="label">Usuarios registrados</div></div>
+        <div class="card"><div class="num" id="stat-total">-</div><div class="label">Peticiones totales</div></div>
+        <div class="card"><div class="num" id="stat-today">-</div><div class="label">Hoy</div></div>
+        <div class="card"><div class="num" id="stat-services">-</div><div class="label">Servicios activos</div></div>
+      </div>
+      <div class="section">
+        <div class="section-header"><h2>📈 Uso por servicio</h2></div>
+        <div id="services-usage"></div>
+      </div>
+    </div>
+
+    <div id="tab-chat" class="hidden">
+      <div class="section" style="margin-bottom:0;">
+        <div class="chat-layout">
+          <div class="chat-sidebar">
+            <h3>Proveedores</h3>
+            <div class="provider-list" id="providerList">
+              <div class="provider-chip active" data-provider="auto" onclick="selectProvider('auto')">
+                <div class="dot" style="background:linear-gradient(90deg,var(--accent),var(--accent2));"></div>
+                <div class="name">🎲 Auto (Fallback)</div>
+              </div>
+            </div>
+          </div>
+          <div class="chat-main">
+            <div class="chat-messages" id="chatMessages">
+              <div class="msg bot">
+                <div class="msg-avatar">🤖</div>
+                <div>
+                  <div class="msg-bubble">Hola Admin. Selecciona un proveedor y escribe para probar. El modo <b>Auto</b> usa fallback entre todos los activos.</div>
+                  <div class="msg-meta"><span class="provider-tag">sistema</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="chat-input-area">
+              <textarea id="chatInput" placeholder="Escribe un mensaje..." rows="1" onkeydown="handleChatKey(event)"></textarea>
+              <button id="sendBtn" onclick="sendMessage()">➤</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-users" class="hidden">
+      <div class="section">
+        <div class="section-header"><h2>👥 Usuarios registrados</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>API Key</th><th>Estado</th><th>Peticiones</th><th>Éxito</th><th>Acción</th></tr></thead>
+            <tbody id="usersTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-services" class="hidden">
+      <div class="section">
+        <div class="section-header"><h2>🔌 Servicios activos</h2></div>
+        <div id="servicesList"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let adminToken = localStorage.getItem('adminToken');
+let selectedProvider = 'auto';
+let activeServices = [];
+
+if (adminToken) { showApp(); loadAll(); }
+
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+async function doLogin() {
+  const pass = document.getElementById('adminPass').value;
+  const err = document.getElementById('loginError');
+  try {
+    const r = await fetch(API + '/api/admin/login', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({password: pass})
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    adminToken = d.token;
+    localStorage.setItem('adminToken', adminToken);
+    showApp(); loadAll();
+  } catch(e) {
+    err.textContent = e.message || 'Error de conexión';
+  }
+}
+function showApp() {
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('app').classList.add('active');
+}
+function logout() {
+  localStorage.removeItem('adminToken');
+  location.reload();
+}
+
+function showTab(tab) {
+  ['dashboard','chat','users','services'].forEach(t => {
+    document.getElementById('tab-'+t).classList.add('hidden');
+    document.getElementById('btn-'+t).classList.remove('active');
+  });
+  document.getElementById('tab-'+tab).classList.remove('hidden');
+  document.getElementById('btn-'+tab).classList.add('active');
+  if(tab==='dashboard') loadStats();
+  if(tab==='users') loadUsers();
+  if(tab==='services') loadServices();
+}
+
+async function loadStats() {
+  try {
+    const r = await fetch(API + '/api/admin/stats', { headers: { 'Authorization': 'Bearer ' + adminToken } });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    document.getElementById('stat-users').textContent = d.totalUsers;
+    document.getElementById('stat-total').textContent = d.totalRequests;
+    document.getElementById('stat-today').textContent = d.todayRequests;
+    document.getElementById('stat-services').textContent = d.activeServices;
+
+    const container = document.getElementById('services-usage');
+    container.innerHTML = '';
+    d.byService.forEach(s => {
+      const pct = s.count > 0 ? Math.round((s.ok / s.count) * 100) : 0;
+      const color = pct >= 80 ? 'var(--success)' : pct >= 50 ? 'var(--warning)' : 'var(--danger)';
+      const div = document.createElement('div');
+      div.className = 'service-row';
+      div.innerHTML = `
+        <div class="service-info">
+          <div class="service-status" style="background:${color};box-shadow:0 0 8px ${color}"></div>
+          <div>
+            <div class="service-name">${s.api_name}</div>
+            <div class="service-url">${s.count} peticiones · ${s.ok} exitosas</div>
+          </div>
+        </div>
+        <div style="font-weight:700;color:${color};font-size:18px;">${pct}%</div>
+      `;
+      container.appendChild(div);
+    });
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function loadUsers() {
+  try {
+    const r = await fetch(API + '/api/admin/users', { headers: { 'Authorization': 'Bearer ' + adminToken } });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    const tbody = document.getElementById('usersTable');
+    tbody.innerHTML = d.map(u => `
+      <tr>
+        <td>${u.id}</td>
+        <td>${u.name || '-'}</td>
+        <td>${u.email}</td>
+        <td><code style="font-size:11px;background:var(--bg3);padding:2px 6px;border-radius:4px;">${u.api_key.substring(0,16)}...</code></td>
+        <td><span class="badge ${u.active ? 'badge-success' : 'badge-danger'}">${u.active ? 'Activo' : 'Inactivo'}</span></td>
+        <td>${u.total_requests || 0}</td>
+        <td>${u.successful || 0}</td>
+        <td><button class="toggle-btn" onclick="toggleUser(${u.id}, ${u.active ? 0 : 1})">${u.active ? 'Desactivar' : 'Activar'}</button></td>
+      </tr>
+    `).join('');
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function toggleUser(id, active) {
+  try {
+    const r = await fetch(API + '/api/admin/toggle-user', {
+      method: 'POST', headers: { 'Authorization': 'Bearer ' + adminToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: id, active })
+    });
+    if (!r.ok) throw new Error('Error');
+    showToast(active ? 'Usuario activado' : 'Usuario desactivado');
+    loadUsers(); loadStats();
+  } catch(e) { showToast('Error al actualizar usuario', 'error'); }
+}
+
+async function loadServices() {
+  try {
+    const r = await fetch(API + '/api/admin/services', { headers: { 'Authorization': 'Bearer ' + adminToken } });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    activeServices = d;
+    const container = document.getElementById('servicesList');
+    container.innerHTML = d.map(s => `
+      <div class="service-row">
+        <div class="service-info">
+          <div class="service-status"></div>
+          <div>
+            <div class="service-name">${s.name}</div>
+            <div class="service-url">${s.id}</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--text2);max-width:50%;overflow:hidden;text-overflow:ellipsis;">${s.url}</div>
+      </div>
+    `).join('');
+    updateProviderList(d);
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+function updateProviderList(services) {
+  const list = document.getElementById('providerList');
+  list.innerHTML = `
+    <div class="provider-chip ${selectedProvider==='auto'?'active':''}" data-provider="auto" onclick="selectProvider('auto')">
+      <div class="dot" style="background:linear-gradient(90deg,var(--accent),var(--accent2));"></div>
+      <div class="name">🎲 Auto (Fallback)</div>
+    </div>
+  `;
+  services.forEach(s => {
+    const modelMap = {
+      groq:'llama-3.1-8b', cerebras:'llama3.1-8b', mistral:'mistral-small',
+      siliconflow:'llama-3.1-8B', together:'llama-3.1-8B-Turbo',
+      xai:'grok-2', openrouter:'llama-3.1-8b', gemini:'gemini-1.5-flash',
+      sarvam:'sarvam-105b', huggingface:'llama-3.1-8B', cloudflare:'llama-3.1-8B',
+      aimlapi:'llama-3.1-8B'
+    };
+    const chip = document.createElement('div');
+    chip.className = 'provider-chip ' + (selectedProvider===s.id?'active':'');
+    chip.dataset.provider = s.id;
+    chip.onclick = () => selectProvider(s.id);
+    chip.innerHTML = `
+      <div class="dot"></div>
+      <div class="name">${s.name}</div>
+      <div class="model">${modelMap[s.id] || s.id}</div>
+    `;
+    list.appendChild(chip);
+  });
+}
+function selectProvider(id) {
+  selectedProvider = id;
+  document.querySelectorAll('.provider-chip').forEach(c => c.classList.remove('active'));
+  document.querySelector(`.provider-chip[data-provider="${id}"]`)?.classList.add('active');
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const btn = document.getElementById('sendBtn');
+  const text = input.value.trim();
+  if (!text) return;
+
+  addMessage('user', text);
+  input.value = '';
+  input.style.height = 'auto';
+  btn.disabled = true;
+
+  const typingId = 'typing-' + Date.now();
+  const msgs = document.getElementById('chatMessages');
+  const typing = document.createElement('div');
+  typing.id = typingId; typing.className = 'typing';
+  typing.innerHTML = '<span></span><span></span><span></span>';
+  msgs.appendChild(typing);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  const start = performance.now();
+  try {
+    const body = {
+      model: 'llama-3.1-8b-instant',
+      messages: [{ role: 'user', content: text }],
+      temperature: 0.7
+    };
+    const r = await fetch(API + '/api/admin/chat', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + adminToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Error del servidor');
+
+    const latency = Math.round(performance.now() - start);
+    const content = d.choices?.[0]?.message?.content || d.candidates?.[0]?.content?.parts?.[0]?.text || 'Sin respuesta';
+    const model = d.model || 'unknown';
+
+    document.getElementById(typingId)?.remove();
+    addMessage('bot', content, model, latency);
+  } catch(e) {
+    document.getElementById(typingId)?.remove();
+    addMessage('bot', '❌ Error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function addMessage(role, text, model, latency) {
+  const msgs = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  const meta = role === 'bot' && model
+    ? `<div class="msg-meta"><span class="provider-tag">${model}</span>${latency ? '<span>'+latency+'ms</span>' : ''}</div>`
+    : '';
+  div.innerHTML = `
+    <div class="msg-avatar">${role==='user'?'👤':'🤖'}</div>
+    <div>
+      <div class="msg-bubble">${escapeHtml(text).replace(/\n/g,'<br>')}</div>
+      ${meta}
+    </div>
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function escapeHtml(t) {
+  const d = document.createElement('div');
+  d.textContent = t;
+  return d.innerHTML;
+}
+
+function loadAll() {
+  loadStats(); loadServices();
+}
+</script>
+</body>
+</html>
